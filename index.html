@@ -2,7 +2,9 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<title>Biblioteca de Áudios</title>
+<title>🎧 Biblioteca de Áudios</title>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <style>
 body {
@@ -11,83 +13,145 @@ body {
   font-family: Arial, sans-serif;
   padding: 20px;
 }
+
+input, button {
+  width: 100%;
+  padding: 8px;
+  margin: 5px 0;
+}
+
 .audio-item {
   background: #222;
   padding: 10px;
   margin-top: 10px;
   border-radius: 6px;
 }
+
 audio {
   width: 100%;
   height: 28px;
   margin-top: 5px;
 }
-input, button {
-  width: 100%;
-  padding: 8px;
-  margin: 5px 0;
+
+button {
+  cursor: pointer;
 }
 </style>
 </head>
 
 <body>
 
-<h2>🎧 Biblioteca de Áudios (Online)</h2>
+<h2>🎧 Biblioteca de Áudios</h2>
 
-<input id="pesquisa" placeholder="🔍 Pesquisar pelo nome...">
-<button onclick="alert('Para adicionar ou editar áudios, edite o arquivo audios.json no GitHub')">
-➕ Adicionar / Editar áudio
-</button>
+<input id="nomeAudio" placeholder="Nome do áudio">
+<input id="audioLink" placeholder="Link direto (.mp3)">
+<button onclick="salvarAudio()">Salvar áudio</button>
+
+<hr>
+
+<input id="pesquisa" placeholder="🔍 Pesquisar pelo nome..." oninput="renderizar()">
 
 <div id="listaAudios"></div>
 
 <script>
+// 🔑 COLE SUAS CHAVES AQUI
+const supabase = supabase.createClient(
+  "https://ugfirrajqityvrgmndhz.supabase.co",          // Project URL
+  "sb_publishable_ivICA8vC-FaVguwsQVrqeQ_SqoOlpHR"             // Publishable key
+);
+
 let audios = [];
-let loopAtivo = false;
-let sequenciaAtiva = false;
 
-const lista = document.getElementById("listaAudios");
-const pesquisaInput = document.getElementById("pesquisa");
+// 🔄 Carregar áudios do Supabase
+async function carregarAudios() {
+  const { data, error } = await supabase
+    .from("audios")
+    .select("*")
+    .order("id", { ascending: true });
 
-// 🔽 CARREGA DO GITHUB (NUVEM)
-fetch("audios.json")
-  .then(r => r.json())
-  .then(dados => {
-    audios = dados;
-    renderizar();
-  });
+  if (error) {
+    alert("Erro ao carregar áudios");
+    console.error(error);
+    return;
+  }
 
+  audios = data;
+  renderizar();
+}
+
+// 💾 Salvar áudio
+async function salvarAudio() {
+  const nome = nomeAudio.value.trim();
+  const link = audioLink.value.trim();
+
+  if (!nome || !link) {
+    alert("Preencha nome e link");
+    return;
+  }
+
+  const { error } = await supabase
+    .from("audios")
+    .insert({ nome, link });
+
+  if (error) {
+    alert("Erro ao salvar");
+    console.error(error);
+    return;
+  }
+
+  nomeAudio.value = "";
+  audioLink.value = "";
+  carregarAudios();
+}
+
+// ✏️ Editar nome
+async function editarAudio(id, nomeAtual) {
+  const novoNome = prompt("Novo nome:", nomeAtual);
+  if (!novoNome) return;
+
+  await supabase
+    .from("audios")
+    .update({ nome: novoNome })
+    .eq("id", id);
+
+  carregarAudios();
+}
+
+// 🗑️ Apagar áudio
+async function apagarAudio(id) {
+  if (!confirm("Apagar este áudio?")) return;
+
+  await supabase
+    .from("audios")
+    .delete()
+    .eq("id", id);
+
+  carregarAudios();
+}
+
+// 🎨 Renderizar lista
 function renderizar() {
-  const filtro = pesquisaInput.value.toLowerCase();
-  lista.innerHTML = "";
+  const filtro = pesquisa.value.toLowerCase();
+  listaAudios.innerHTML = "";
 
   audios
     .filter(a => a.nome.toLowerCase().includes(filtro))
-    .forEach((a, i) => {
+    .forEach(a => {
       const div = document.createElement("div");
       div.className = "audio-item";
 
-      const titulo = document.createElement("strong");
-      titulo.innerText = a.nome;
+      div.innerHTML = `
+        <strong>${a.nome}</strong>
+        <audio controls src="${a.link}"></audio>
+        <button onclick="editarAudio(${a.id}, '${a.nome.replace(/'/g, "\\'")}')">✏️ Editar</button>
+        <button onclick="apagarAudio(${a.id})">🗑️ Apagar</button>
+      `;
 
-      const audio = document.createElement("audio");
-      audio.controls = true;
-      audio.src = a.link;
-      audio.loop = loopAtivo;
-
-      audio.onended = () => {
-        if (sequenciaAtiva && audios[i + 1]) {
-          document.querySelectorAll("audio")[i + 1].play();
-        }
-      };
-
-      div.appendChild(titulo);
-      div.appendChild(audio);
-      lista.appendChild(div);
+      listaAudios.appendChild(div);
     });
 }
 
-pesquisaInput.oninput = renderizar;
+carregarAudios();
 </script>
 
 </body>
