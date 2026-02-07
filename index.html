@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <title>🎧 Biblioteca de Áudios</title>
 
-  <!-- SDK do Supabase -->
+  <!-- Supabase SDK -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
   <style>
@@ -46,7 +46,9 @@
 
 <input id="nomeAudio" placeholder="Nome do áudio">
 <input id="audioLink" placeholder="Link direto (.mp3)">
-<button id="salvar">Salvar áudio</button>
+
+<!-- 🔥 BOTÃO CORRIGIDO -->
+<button id="salvar" type="button">Salvar áudio</button>
 
 <hr>
 
@@ -56,13 +58,13 @@
 
 <script>
 /* =====================================================
-   
+   🔑 CONFIGURAÇÃO DO SUPABASE
    ===================================================== */
 
-/*  */
+/* ✅ Project URL */
 const SUPABASE_URL = "https://ugfirrajqityvrgmndhz.supabase.co";
 
-/* I */
+/* ✅ Publishable key (cole a sua aqui) */
 const SUPABASE_KEY = "sb_publishable_ivICA8vC-FaVguwsQVrqeQ_SqoOlpHR";
 
 /* ===================================================== */
@@ -77,6 +79,7 @@ const nomeInput = document.getElementById("nomeAudio");
 const linkInput = document.getElementById("audioLink");
 const lista = document.getElementById("listaAudios");
 const pesquisaInput = document.getElementById("pesquisa");
+const salvarBtn = document.getElementById("salvar");
 
 /* ESTADO */
 let audios = [];
@@ -120,10 +123,12 @@ async function salvarAudio() {
     return;
   }
 
+  // limpa os campos
   nomeInput.value = "";
   linkInput.value = "";
 
-  carregarAudios(); // atualiza a lista
+  // recarrega a lista
+  carregarAudios();
 }
 
 /* 🎨 MOSTRAR NA TELA */
@@ -151,9 +156,13 @@ function renderizar() {
     });
 }
 
-/* EVENTOS */
-document.getElementById("salvar").onclick = salvarAudio;
-pesquisaInput.oninput = renderizar;
+/* EVENTOS (COM PREVENTDEFAULT POR SEGURANÇA) */
+salvarBtn.addEventListener("click", (e) => {
+  e.preventDefault();
+  salvarAudio();
+});
+
+pesquisaInput.addEventListener("input", renderizar);
 
 /* INICIAR */
 carregarAudios();
