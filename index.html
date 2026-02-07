@@ -4,8 +4,8 @@
   <meta charset="UTF-8">
   <title>🎧 Biblioteca de Áudios</title>
 
-  <!-- Supabase SDK -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <!-- Supabase SDK (UMD - SEM ERRO DE EXPORT) -->
+  <script src="https://unpkg.com/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 
   <style>
     body {
@@ -46,8 +46,6 @@
 
 <input id="nomeAudio" placeholder="Nome do áudio">
 <input id="audioLink" placeholder="Link direto (.mp3)">
-
-<!-- IMPORTANTE: type="button" -->
 <button id="salvar" type="button">Salvar áudio</button>
 
 <hr>
@@ -57,34 +55,33 @@
 <div id="listaAudios"></div>
 
 <script>
-/* =====================================================
-   🔑 CONFIGURAÇÃO DO SUPABASE
-   ===================================================== */
+/* =======================
+   CONFIGURAÇÃO SUPABASE
+   ======================= */
 
-/* ✅ Project URL (essa você JÁ TEM) */
 const SUPABASE_URL = "https://ugfirrajqityvrgmndhz.supabase.co";
-
-/* ❗ COLE A SUA PUBLISHABLE KEY AQUI */
 const SUPABASE_KEY = "sb_publishable_ivICA8vC-FaVguwsQVrqeQ_SqoOlpHR";
-
-/* ===================================================== */
 
 const supabaseClient = window.supabase.createClient(
   SUPABASE_URL,
   SUPABASE_KEY
 );
 
-/* ELEMENTOS */
+/* =======================
+   ELEMENTOS
+   ======================= */
+
 const nomeInput = document.getElementById("nomeAudio");
 const linkInput = document.getElementById("audioLink");
+const salvarBtn = document.getElementById("salvar");
 const lista = document.getElementById("listaAudios");
 const pesquisaInput = document.getElementById("pesquisa");
-const salvarBtn = document.getElementById("salvar");
 
-/* ESTADO */
 let audios = [];
 
-/* 🔄 CARREGAR ÁUDIOS */
+/* =======================
+   CARREGAR ÁUDIOS
+   ======================= */
 async function carregarAudios() {
   const { data, error } = await supabaseClient
     .from("audios")
@@ -92,8 +89,8 @@ async function carregarAudios() {
     .order("id", { ascending: true });
 
   if (error) {
-    alert("Erro ao carregar áudios: " + error.message);
-    console.error(error);
+    console.error("Erro ao carregar:", error);
+    alert("Erro ao carregar áudios");
     return;
   }
 
@@ -101,7 +98,9 @@ async function carregarAudios() {
   renderizar();
 }
 
-/* 💾 SALVAR ÁUDIO */
+/* =======================
+   SALVAR ÁUDIO
+   ======================= */
 async function salvarAudio() {
   const nome = nomeInput.value.trim();
   const link = linkInput.value.trim();
@@ -113,11 +112,11 @@ async function salvarAudio() {
 
   const { error } = await supabaseClient
     .from("audios")
-    .insert({ nome, link });
+    .insert([{ nome, link }]);
 
   if (error) {
-    alert("Erro ao salvar áudio: " + error.message);
-    console.error(error);
+    console.error("Erro ao salvar:", error);
+    alert("Erro ao salvar áudio");
     return;
   }
 
@@ -127,7 +126,9 @@ async function salvarAudio() {
   carregarAudios();
 }
 
-/* 🎨 RENDERIZAR */
+/* =======================
+   RENDERIZAR
+   ======================= */
 function renderizar() {
   const filtro = pesquisaInput.value.toLowerCase();
   lista.innerHTML = "";
@@ -147,11 +148,15 @@ function renderizar() {
     });
 }
 
-/* EVENTOS */
+/* =======================
+   EVENTOS
+   ======================= */
 salvarBtn.addEventListener("click", salvarAudio);
 pesquisaInput.addEventListener("input", renderizar);
 
-/* INICIAR */
+/* =======================
+   INICIAR
+   ======================= */
 carregarAudios();
 </script>
 
