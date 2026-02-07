@@ -1,54 +1,135 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>🎧 Biblioteca de Áudios</title>
+
+  <!-- SDK do Supabase -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <style>
+    body {
+      background: #111;
+      color: #fff;
+      font-family: Arial, sans-serif;
+      padding: 20px;
+    }
+
+    input, button {
+      width: 100%;
+      padding: 8px;
+      margin: 5px 0;
+    }
+
+    .audio-item {
+      background: #222;
+      padding: 10px;
+      margin-top: 10px;
+      border-radius: 6px;
+    }
+
+    audio {
+      width: 100%;
+      height: 28px;
+      margin-top: 5px;
+    }
+
+    button {
+      cursor: pointer;
+    }
+  </style>
+</head>
+
+<body>
+
+<h2>🎧 Biblioteca de Áudios</h2>
+
+<input id="nomeAudio" placeholder="Nome do áudio">
+<input id="audioLink" placeholder="Link direto (.mp3)">
+<button id="salvar">Salvar áudio</button>
+
+<hr>
+
+<input id="pesquisa" placeholder="🔍 Pesquisar pelo nome...">
+
+<div id="listaAudios"></div>
+
 <script>
-const supabase = window.supabase.createClient(
-  "https://ugfirrajqityvrgmndhz.supabase.co",
-  "sb_publishable_SUA_CHAVE_AQUI"
+/* =====================================================
+   
+   ===================================================== */
+
+/*  */
+const SUPABASE_URL = "https://ugfirrajqityvrgmndhz.supabase.co";
+
+/* I */
+const SUPABASE_KEY = "sb_publishable_ivICA8vC-FaVguwsQVrqeQ_SqoOlpHR";
+
+/* ===================================================== */
+
+const supabaseClient = supabase.createClient(
+  SUPABASE_URL,
+  SUPABASE_KEY
 );
 
+/* ELEMENTOS */
+const nomeInput = document.getElementById("nomeAudio");
+const linkInput = document.getElementById("audioLink");
+const lista = document.getElementById("listaAudios");
+const pesquisaInput = document.getElementById("pesquisa");
+
+/* ESTADO */
 let audios = [];
 
+/* 🔄 CARREGAR ÁUDIOS */
 async function carregarAudios() {
-  const { data, error } = await supabase
+  const { data, error } = await supabaseClient
     .from("audios")
     .select("*")
     .order("id", { ascending: true });
 
   if (error) {
-    alert("Erro ao carregar: " + error.message);
+    alert("Erro ao carregar áudios: " + error.message);
     console.error(error);
     return;
   }
 
-  audios = data;
+  audios = data || [];
   renderizar();
 }
 
+/* 💾 SALVAR ÁUDIO */
 async function salvarAudio() {
-  const nome = nomeAudio.value.trim();
-  const link = audioLink.value.trim();
+  const nome = nomeInput.value.trim();
+  const link = linkInput.value.trim();
 
   if (!nome || !link) {
     alert("Preencha nome e link");
     return;
   }
 
-  const { error } = await supabase
+  const { error } = await supabaseClient
     .from("audios")
-    .insert([{ nome, link }]);
+    .insert([
+      { nome: nome, link: link }
+    ]);
 
   if (error) {
-    alert("Erro ao salvar: " + error.message);
+    alert("Erro ao salvar áudio: " + error.message);
     console.error(error);
     return;
   }
 
-  nomeAudio.value = "";
-  audioLink.value = "";
-  carregarAudios();
+  nomeInput.value = "";
+  linkInput.value = "";
+
+  carregarAudios(); // atualiza a lista
 }
 
+/* 🎨 MOSTRAR NA TELA */
 function renderizar() {
-  const filtro = pesquisa.value.toLowerCase();
-  listaAudios.innerHTML = "";
+  const filtro = pesquisaInput.value.toLowerCase();
+  lista.innerHTML = "";
 
   audios
     .filter(a => a.nome.toLowerCase().includes(filtro))
@@ -56,14 +137,27 @@ function renderizar() {
       const div = document.createElement("div");
       div.className = "audio-item";
 
-      div.innerHTML = `
-        <strong>${a.nome}</strong>
-        <audio controls src="${a.link}"></audio>
-      `;
+      const titulo = document.createElement("strong");
+      titulo.innerText = a.nome;
 
-      listaAudios.appendChild(div);
+      const audio = document.createElement("audio");
+      audio.controls = true;
+      audio.src = a.link;
+
+      div.appendChild(titulo);
+      div.appendChild(audio);
+
+      lista.appendChild(div);
     });
 }
 
+/* EVENTOS */
+document.getElementById("salvar").onclick = salvarAudio;
+pesquisaInput.oninput = renderizar;
+
+/* INICIAR */
 carregarAudios();
 </script>
+
+</body>
+</html>
