@@ -47,7 +47,7 @@
 <input id="nomeAudio" placeholder="Nome do áudio">
 <input id="audioLink" placeholder="Link direto (.mp3)">
 
-<!-- 🔥 BOTÃO CORRIGIDO -->
+<!-- IMPORTANTE: type="button" -->
 <button id="salvar" type="button">Salvar áudio</button>
 
 <hr>
@@ -61,15 +61,15 @@
    🔑 CONFIGURAÇÃO DO SUPABASE
    ===================================================== */
 
-/* ✅ Project URL */
+/* ✅ Project URL (essa você JÁ TEM) */
 const SUPABASE_URL = "https://ugfirrajqityvrgmndhz.supabase.co";
 
-/* ✅ Publishable key (cole a sua aqui) */
+/* ❗ COLE A SUA PUBLISHABLE KEY AQUI */
 const SUPABASE_KEY = "sb_publishable_ivICA8vC-FaVguwsQVrqeQ_SqoOlpHR";
 
 /* ===================================================== */
 
-const supabaseClient = supabase.createClient(
+const supabaseClient = window.supabase.createClient(
   SUPABASE_URL,
   SUPABASE_KEY
 );
@@ -113,9 +113,7 @@ async function salvarAudio() {
 
   const { error } = await supabaseClient
     .from("audios")
-    .insert([
-      { nome: nome, link: link }
-    ]);
+    .insert({ nome, link });
 
   if (error) {
     alert("Erro ao salvar áudio: " + error.message);
@@ -123,15 +121,13 @@ async function salvarAudio() {
     return;
   }
 
-  // limpa os campos
   nomeInput.value = "";
   linkInput.value = "";
 
-  // recarrega a lista
   carregarAudios();
 }
 
-/* 🎨 MOSTRAR NA TELA */
+/* 🎨 RENDERIZAR */
 function renderizar() {
   const filtro = pesquisaInput.value.toLowerCase();
   lista.innerHTML = "";
@@ -142,26 +138,17 @@ function renderizar() {
       const div = document.createElement("div");
       div.className = "audio-item";
 
-      const titulo = document.createElement("strong");
-      titulo.innerText = a.nome;
-
-      const audio = document.createElement("audio");
-      audio.controls = true;
-      audio.src = a.link;
-
-      div.appendChild(titulo);
-      div.appendChild(audio);
+      div.innerHTML = `
+        <strong>${a.nome}</strong>
+        <audio controls src="${a.link}"></audio>
+      `;
 
       lista.appendChild(div);
     });
 }
 
-/* EVENTOS (COM PREVENTDEFAULT POR SEGURANÇA) */
-salvarBtn.addEventListener("click", (e) => {
-  e.preventDefault();
-  salvarAudio();
-});
-
+/* EVENTOS */
+salvarBtn.addEventListener("click", salvarAudio);
 pesquisaInput.addEventListener("input", renderizar);
 
 /* INICIAR */
